@@ -88,7 +88,7 @@ class MLP:
             self.x[layer] = out.copy()
 
             W, b = self.W[layer], self.b[layer]
-            h = W @ out + b
+            h = out @ W.T + b
 
             if self.activation == 'relu':
                 out = h * (h > 0).astype(float)
@@ -115,6 +115,6 @@ class MLP:
                 sig = 1 / (1 + np.exp(-h))
                 dh = dout * sig * (1 - sig)
 
-            self.dW[layer] = np.outer(dh, x)
-            self.db[layer] = dh
-            dout = W.T @ dh
+            self.dW[layer] = np.outer(dh, x) / x.shape[0]
+            self.db[layer] = dh.mean(axis=0)
+            dout = dh @ W
