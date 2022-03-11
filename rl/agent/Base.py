@@ -5,11 +5,14 @@ class BaseAgent:
     def __init__(self, name):
         self.name = name
 
-    def reset(self):
-        raise NotImplementedError
+    def init(self, n_episodes, shape_input, shape_output):
+        pass
 
-    def feedback(self, R, X):
-        raise NotImplementedError
+    def reset(self):
+        pass
+
+    def feedback(self, R, X, it, episode_is_over=False):
+        pass
 
     def action(self,S,X,A):
         raise NotImplementedError
