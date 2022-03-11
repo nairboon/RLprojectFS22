@@ -27,9 +27,10 @@ class QLearnerAgent(BaseAgent):
         self.eps = self.eps_0 / (1 + self.beta * it)
 
         # temporal difference
-        next_Q = self.QNet(X[np.newaxis, ...])[0]
-        next_Q[allowed_A.flatten() == 0] = -np.inf
-        next_Q = np.max(next_Q, axis=-1)
+        if not episode_is_over:
+            next_Q = self.QNet(X[np.newaxis, ...])[0]
+            next_Q[allowed_A.flatten() == 0] = -np.inf
+            next_Q = np.max(next_Q, axis=-1)
 
         self.QNet.zero_grad()
         Q = self.QNet(prev_X[np.newaxis, ...])[0]
