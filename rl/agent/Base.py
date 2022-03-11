@@ -9,7 +9,7 @@ class BaseAgent:
         pass
 
 
-    def feedback(self, R, X, it, episode_is_over=False):
+    def feedback(self, R, prev_X, X, A, it, episode_is_over=False):
         pass
 
     def action(self,S,X,A):

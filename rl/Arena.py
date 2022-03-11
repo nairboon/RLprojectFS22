@@ -19,16 +19,16 @@ class Arena:
         self.agents = agents
         self.params = {"board_size" : 4}
 
-    def sample(self, episodes):
+    def sample(self, episodes, runs=1):
 
         results = {}
         for agent in self.agents:
-            res = self.run_agent(agent, episodes=episodes)
+            res = self.run_agent(agent, episodes=episodes,runs=runs)
             results[agent.name] = res
 
         return results
 
-    def run_agent(self, agent, episodes, runs=1):
+    def run_agent(self, agent, episodes, runs):
         env = Chess_Env(self.params["board_size"])
 
         rewards = np.ndarray((runs,episodes))
@@ -43,10 +43,10 @@ class Arena:
                 action_cnt = 0
                 R = 0
                 while Done==0:
-
+                    prev_X = X.copy()
                     selected_action = agent.action(S,X,allowed_a)
                     S, X, allowed_a, R, Done = env.OneStep(selected_action)
-                    agent.feedback(R, X, i,Done==1)
+                    agent.feedback(R, prev_X, X, selected_action, i,Done==1)
                     action_cnt += 1
 
 
