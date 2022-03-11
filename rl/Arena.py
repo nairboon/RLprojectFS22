@@ -28,26 +28,33 @@ class Arena:
 
         return results
 
-    def run_agent(self, agent, episodes):
+    def run_agent(self, agent, episodes, runs=1):
         env = Chess_Env(self.params["board_size"])
-        rewards = []
-        moves = []
-        for i in range(episodes):
-            S, X, allowed_a = env.Initialise_game()
-            Done = 0
-            action_cnt = 0
-            R = 0
-            while Done==0:
 
-                selected_action = agent.action(S,X,allowed_a)
-                S, X, allowed_a, R, Done = env.OneStep(selected_action)
-                action_cnt += 1
+        rewards = np.ndarray((runs,episodes))
+        moves = np.ndarray((runs, episodes))
 
-                if Done:
-                    break
+        for k in range(runs):
+            for i in range(episodes):
+                S, X, allowed_a = env.Initialise_game()
+                Done = 0
+                action_cnt = 0
+                R = 0
+                while Done==0:
 
-            rewards.append(R)
-            moves.append(action_cnt)
+                    selected_action = agent.action(S,X,allowed_a)
+                    S, X, allowed_a, R, Done = env.OneStep(selected_action)
+                    agent.feedback(R, X)
+                    action_cnt += 1
 
-        return RunMetrics(np.mean(rewards), np.mean(moves))
+
+                    if Done:
+                        rewards[k,i] = R
+                        moves[k,i] = action_cnt
+                        break
+
+
+
+
+        return RunMetrics(rewards.mean(axis=0), moves.mean(axis=0))
 
