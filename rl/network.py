@@ -115,6 +115,6 @@ class MLP:
                 sig = 1 / (1 + np.exp(-h))
                 dh = dout * sig * (1 - sig)
 
-            self.dW[layer] = np.outer(dh, x) / x.shape[0]
-            self.db[layer] = dh.mean(axis=0)
+            self.dW[layer] += np.outer(dh, x) / x.shape[0]
+            self.db[layer] += dh.mean(axis=0)
             dout = dh @ W
