@@ -8,8 +8,6 @@ class BaseAgent:
     def init(self, n_episodes, shape_input, shape_output):
         pass
 
-    def reset(self):
-        pass
 
     def feedback(self, R, X, it, episode_is_over=False):
         pass

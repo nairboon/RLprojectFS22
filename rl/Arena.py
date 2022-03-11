@@ -35,6 +35,8 @@ class Arena:
         moves = np.ndarray((runs, episodes))
 
         for k in range(runs):
+            S, X, allowed_a = env.Initialise_game()
+            agent.init(n_episodes=episodes, shape_input=X.shape[0], shape_output=allowed_a.shape[0])
             for i in range(episodes):
                 S, X, allowed_a = env.Initialise_game()
                 Done = 0
@@ -44,7 +46,7 @@ class Arena:
 
                     selected_action = agent.action(S,X,allowed_a)
                     S, X, allowed_a, R, Done = env.OneStep(selected_action)
-                    agent.feedback(R, X)
+                    agent.feedback(R, X, i,Done==1)
                     action_cnt += 1
 
 
