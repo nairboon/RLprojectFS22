@@ -2,6 +2,7 @@ from typing import List
 from dataclasses import dataclass
 
 import numpy as np
+from tqdm import tqdm
 
 from rl.agent.Base import BaseAgent
 from rl.env.Chess_env import Chess_Env
@@ -34,7 +35,7 @@ class Arena:
         rewards = np.ndarray((runs,episodes))
         moves = np.ndarray((runs, episodes))
 
-        for k in range(runs):
+        for k in tqdm(range(runs)):
             S, X, allowed_a = env.Initialise_game()
             agent.init(n_episodes=episodes, shape_input=X.shape[0], shape_output=allowed_a.shape[0])
             for i in range(episodes):
@@ -46,7 +47,7 @@ class Arena:
                     prev_X = X.copy()
                     selected_action = agent.action(S,X,allowed_a)
                     S, X, allowed_a, R, Done = env.OneStep(selected_action)
-                    agent.feedback(R, prev_X, X, selected_action, i,Done==1)
+                    agent.feedback(R, prev_X, X, selected_action, allowed_a, i,Done==1)
                     action_cnt += 1
 
 
