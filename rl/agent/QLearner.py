@@ -11,16 +11,34 @@ class QLearnerAgent(BaseAgent):
         super().__init__(__class__.__name__)
         # configuration
         self.eps_0 = kwargs.get("epsilon_0", 0.2)
-        self.beta = kwargs.get("beta", 0.00005)
+        self.beta = kwargs.get("beta", 0.05)
         self.gamma = kwargs.get("gamma", 0.85)
-        self.eta = kwargs.get("eta", 0.0035)
-        self.N_h = kwargs.get("N_h", 200)
-        self.activation = kwargs.get("activation", "sigmoid")
+        self.eta = kwargs.get("eta", 0.01)
+        self.N_h = kwargs.get("N_h", 16)
+        self.activation = kwargs.get("activation", "relu")
+
+        # learning method
+        self.method = kwargs.get("method", "q-learning")
+        assert self.method in ['q-learning', 'sarsa']
+
+        # optimizer
+        self.optimizer = kwargs.get("optimizer", "rmsprop")  #"sgd")
+        assert self.optimizer in ['sgd', 'rmsprop']
+
+        if self.optimizer == 'rmsprop':
+            self.eps_rms = kwargs.get("epsilon_rmsprop", 1e-8)
+            self.alpha_rms = kwargs.get("alpha_rmsprop", 0.99)
+            self.mom_rms = kwargs.get("momentum_rmsprop", 0.9)
+            self._v_rms = 0.0
+            self._b_rms = 0.0
 
     def init(self, n_episodes, shape_input, shape_output):
         self.QNet = MLP(shape_input, shape_output, self.N_h, self.activation)
         self.eps = self.eps_0
-        self.prev_Q = None
+
+        if self.optimizer == 'rmsprop':
+            self._v_rms = 0.0
+            self._b_rms = 0.0
 
     def feedback(self, R, prev_X, X, A, allowed_A, it, episode_is_over=False):
         # adjust epsilon
@@ -30,25 +48,45 @@ class QLearnerAgent(BaseAgent):
         if not episode_is_over:
             next_Q = self.QNet(X[np.newaxis, ...])[0]
             next_Q[allowed_A.flatten() == 0] = -np.inf
-            next_Q = np.max(next_Q, axis=-1)
+
+            if self.method == 'q-learning':
+                next_Q = np.max(next_Q, axis=-1)
+            elif self.method == 'sarsa':
+                # epsilon-greedy
+                if random.random() < self.eps:
+                    a, _ = np.where(allowed_A == 1)
+                    a_agent = np.random.permutation(a)[0]
+                    next_Q = next_Q[a_agent]
+                else:
+                    next_Q = np.max(next_Q, axis=-1)
+            else:
+                raise NotImplementedError
 
         self.QNet.zero_grad()
         Q = self.QNet(prev_X[np.newaxis, ...])[0]
 
-        target = np.zeros_like(Q)
-        target[A] = R - Q[A]
+        delta = np.zeros_like(Q)
+        delta[A] = Q[A] - R
         if not episode_is_over:
-            target[A] += self.gamma * next_Q
-        delta = Q - target
-
+            delta[A] -= self.gamma * next_Q
+        delta = delta[np.newaxis, ...]
+        
         self.QNet.backward(delta)
         grads = self.QNet.grads
-        self.QNet.step(grads, eta=self.eta)
+        if self.optimizer == 'sgd':
+            self.QNet.step(grads, eta=self.eta)
+        elif self.optimizer == 'rmsprop':
+            self._v_rms *= self.alpha_rms
+            self._v_rms += (1 - self.alpha_rms) * grads ** 2
+            self._b_rms *= self.mom_rms
+            self._b_rms += grads / (np.sqrt(self._v_rms) + self.eps_rms)
+            self.QNet.step(self._b_rms, eta=self.eta)
+        else:
+            raise NotImplementedError
 
     def action(self, S, X, A):
         # get Q values - assuming non-batch
         Q = self.QNet(X[np.newaxis, ...])[0]
-        self.prev_Q = Q.copy()
 
         # epsilon-greedy
         if random.random() < self.eps:

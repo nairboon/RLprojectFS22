@@ -53,7 +53,10 @@ class MLP:
         for layer in range(len(self.dW)):
             _grads.append(self.dW[layer].flatten())
             _grads.append(self.db[layer])
-        return np.concatenate(_grads)
+        try:
+            return np.concatenate(_grads)
+        except:
+            import pdb; pdb.set_trace()
 
     def zero_grad(self):
         """set all gradients to zero and remove cache"""
@@ -84,28 +87,40 @@ class MLP:
 
     def forward(self, x):
         out = x.copy()
-        for layer in range(len(self.W)):
+        for layer in range(len(self.W) - 1):
             self.x[layer] = out.copy()
 
             W, b = self.W[layer], self.b[layer]
             h = out @ W.T + b
 
             if self.activation == 'relu':
-                out = h * (h > 0).astype(float)
+                out = np.clip(h, a_min=0.0, a_max=np.inf)
             elif self.activation == 'sigmoid':
                 out = 1 / (1 + np.exp(-h))
             else:
                 raise NotImplementedError
 
             self.h[layer] = h.copy()
+        
+        self.x[-1] = out.copy()
+        W, b = self.W[-1], self.b[-1]
+        h = out @ W.T + b
+        self.h[-1] = h.copy()
 
-        return out
+        return h
 
     def backward(self, dx):
         assert not any([x is None for x in self.x]), "must run a forward pass first"
 
-        dout = dx.copy()
-        for layer in reversed(range(len(self.W))):
+        W = self.W[-1]
+        x, h = self.x[-1], self.h[-1]
+        dh = dx.copy()
+
+        self.dW[-1] += (dh[..., np.newaxis] * x[..., np.newaxis, :]).mean(axis=0)
+        self.db[-1] += dh.mean(axis=0)
+        dout = dh @ W
+
+        for layer in reversed(range(len(self.W) - 1)):
             W = self.W[layer]
             x, h = self.x[layer], self.h[layer]
 
@@ -115,6 +130,6 @@ class MLP:
                 sig = 1 / (1 + np.exp(-h))
                 dh = dout * sig * (1 - sig)
 
-            self.dW[layer] += np.outer(dh, x) / x.shape[0]
+            self.dW[layer] += (dh[..., np.newaxis] * x[..., np.newaxis, :]).mean(axis=0)
             self.db[layer] += dh.mean(axis=0)
             dout = dh @ W
