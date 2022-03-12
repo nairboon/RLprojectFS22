@@ -13,7 +13,7 @@ class QLearnerAgent(BaseAgent):
         self.eps_0 = kwargs.get("epsilon_0", 0.2)
         self.beta = kwargs.get("beta", 0.05)
         self.gamma = kwargs.get("gamma", 0.85)
-        self.eta = kwargs.get("eta", 0.01)
+        self.eta = kwargs.get("eta", 1e-3)
         self.N_h = kwargs.get("N_h", 16)
         self.activation = kwargs.get("activation", "relu")
 
@@ -28,7 +28,7 @@ class QLearnerAgent(BaseAgent):
         if self.optimizer == 'rmsprop':
             self.eps_rms = kwargs.get("epsilon_rmsprop", 1e-8)
             self.alpha_rms = kwargs.get("alpha_rmsprop", 0.99)
-            self.mom_rms = kwargs.get("momentum_rmsprop", 0.9)
+            self.mom_rms = kwargs.get("momentum_rmsprop", 0.0)
             self._v_rms = 0.0
             self._b_rms = 0.0
 
@@ -62,6 +62,7 @@ class QLearnerAgent(BaseAgent):
             else:
                 raise NotImplementedError
 
+        # create bellman target
         self.QNet.zero_grad()
         Q = self.QNet(prev_X[np.newaxis, ...])[0]
 
@@ -70,7 +71,8 @@ class QLearnerAgent(BaseAgent):
         if not episode_is_over:
             delta[A] -= self.gamma * next_Q
         delta = delta[np.newaxis, ...]
-        
+
+        # gradient descent
         self.QNet.backward(delta)
         grads = self.QNet.grads
         if self.optimizer == 'sgd':
