@@ -22,7 +22,7 @@ class QLearnerAgent(BaseAgent):
         assert self.method in ['q-learning', 'sarsa']
 
         # optimizer
-        self.optimizer = kwargs.get("optimizer", "rmsprop")  #"sgd")
+        self.optimizer = kwargs.get("optimizer", "sgd")
         assert self.optimizer in ['sgd', 'rmsprop']
 
         if self.optimizer == 'rmsprop':

@@ -12,9 +12,10 @@ from rl.env.Chess_env import Chess_Env
 class RunMetrics:
     avg_reward: float
     avg_moves: float
+    max_norms: float
+
 
 class Arena:
-
 
     def __init__(self, agents : List[BaseAgent]):
         self.agents = agents
@@ -32,8 +33,9 @@ class Arena:
     def run_agent(self, agent, episodes, runs):
         env = Chess_Env(self.params["board_size"])
 
-        rewards = np.ndarray((runs,episodes))
+        rewards = np.ndarray((runs, episodes))
         moves = np.ndarray((runs, episodes))
+        max_norms = np.ndarray((runs, episodes))
 
         with tqdm(total=runs * episodes) as pbar:
             for k in range(runs):
@@ -44,6 +46,7 @@ class Arena:
                     Done = 0
                     action_cnt = 0
                     R = 0
+                    max_norm = 0
                     while Done==0:
                         prev_X = X.copy()
                         selected_action = agent.action(S,X,allowed_a)
@@ -51,15 +54,13 @@ class Arena:
                         agent.feedback(R, prev_X, X, selected_action, allowed_a, i,Done==1)
                         action_cnt += 1
 
+                        max_norm = max(max_norm, np.linalg.norm(agent.QNet.grads))
 
                         if Done:
                             rewards[k,i] = R
                             moves[k,i] = action_cnt
+                            max_norms[k,i] = max_norm
                             pbar.update()
                             break
 
-
-
-
-        return RunMetrics(rewards.mean(axis=0), moves.mean(axis=0))
-
+        return RunMetrics(rewards.mean(axis=0), moves.mean(axis=0), max_norms.mean(axis=0))
