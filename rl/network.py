@@ -12,7 +12,7 @@ def create_weights(N_in, N_out):
 class MLP:
     """Multilayer Perceptron with ReLU activations"""
     def __init__(self, N_in, N_out, N_hs, activation="sigmoid"):
-        assert activation in ["relu", "sigmoid"], "activation should be either 'relu' or 'sigmoid'"
+        assert activation in ["relu", "sigmoid", None], "activation should be either 'relu' or 'sigmoid' or None"
         self.activation = activation
 
         if not isinstance(N_hs, Iterable):
@@ -97,6 +97,8 @@ class MLP:
                 out = np.clip(h, a_min=0.0, a_max=np.inf)
             elif self.activation == 'sigmoid':
                 out = 1 / (1 + np.exp(-h))
+            elif self.activation is None:
+                out = h
             else:
                 raise NotImplementedError
 
@@ -129,6 +131,8 @@ class MLP:
             elif self.activation == 'sigmoid':
                 sig = 1 / (1 + np.exp(-h))
                 dh = dout * sig * (1 - sig)
+            elif self.activation is None:
+                dh = dout
 
             self.dW[layer] += (dh[..., np.newaxis] * x[..., np.newaxis, :]).mean(axis=0)
             self.db[layer] += dh.mean(axis=0)
