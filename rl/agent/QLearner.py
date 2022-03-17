@@ -15,7 +15,7 @@ class QLearnerAgent(BaseAgent):
         self.beta = kwargs.get("beta", 0.05)
         self.gamma = kwargs.get("gamma", 0.85)
         self.eta = kwargs.get("eta", 1e-3)
-        self.N_h = kwargs.get("N_h", 16)
+        self.N_h = kwargs.get("N_h", None)
         self.activation = kwargs.get("activation", "relu")
         self.mlp_initialization = kwargs.get("initialization", "xavier")
 

@@ -1,4 +1,5 @@
 from collections import Iterable
+from venv import create
 import numpy as np
 
 
@@ -15,31 +16,37 @@ def create_weights_uniform(N_in, N_out):
 
 class MLP:
     """Multilayer Perceptron with ReLU activations"""
-    def __init__(self, N_in, N_out, N_hs, activation="sigmoid", initialization="xavier"):
+    def __init__(self, N_in, N_out, N_hs=None, activation="sigmoid", initialization="xavier"):
         assert activation in ["relu", "sigmoid", None], "activation should be either 'relu' or 'sigmoid' or None"
         self.activation = activation
-
-        if not isinstance(N_hs, Iterable):
-            N_hs = [N_hs]
 
         if initialization== "xavier":
             create_weights = create_weights_xavier
         else:
             create_weights = create_weights_uniform
 
+        # single layer
+        if N_hs is None:
+            self.W = [create_weights(N_in, N_out)]
+            self.b = [np.zeros((N_out,))]
 
-        # input layer
-        self.W = [create_weights(N_in, N_hs[0])]
-        self.b = [np.zeros((N_hs[0],))]
+        # multi-layer
+        else:
+            if not isinstance(N_hs, Iterable):
+                N_hs = [N_hs]
 
-        # hidden layers
-        for idx in range(len(N_hs) - 1):
-            self.W.append(create_weights(N_hs[idx], N_hs[idx + 1]))
-            self.b.append(np.zeros((N_hs[idx + 1],)))
+            # input layer
+            self.W = [create_weights(N_in, N_hs[0])]
+            self.b = [np.zeros((N_hs[0],))]
 
-        # output layer
-        self.W.append(create_weights(N_hs[-1], N_out))
-        self.b.append(np.zeros((N_out,)))
+            # hidden layers
+            for idx in range(len(N_hs) - 1):
+                self.W.append(create_weights(N_hs[idx], N_hs[idx + 1]))
+                self.b.append(np.zeros((N_hs[idx + 1],)))
+
+            # output layer
+            self.W.append(create_weights(N_hs[-1], N_out))
+            self.b.append(np.zeros((N_out,)))
 
         # create cache for backpropagation
         self.zero_grad()
