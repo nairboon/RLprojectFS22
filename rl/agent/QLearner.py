@@ -8,7 +8,8 @@ from rl.network import MLP
 class QLearnerAgent(BaseAgent):
 
     def __init__(self, **kwargs):
-        super().__init__(__class__.__name__)
+        name = kwargs.get("name", __class__.__name__)
+        super().__init__(name)
         # configuration
         self.eps_0 = kwargs.get("epsilon_0", 0.2)
         self.beta = kwargs.get("beta", 0.05)
@@ -16,6 +17,7 @@ class QLearnerAgent(BaseAgent):
         self.eta = kwargs.get("eta", 1e-3)
         self.N_h = kwargs.get("N_h", 16)
         self.activation = kwargs.get("activation", "relu")
+        self.mlp_initialization = kwargs.get("initialization", "xavier")
 
         # learning method
         self.method = kwargs.get("method", "q-learning")
@@ -33,7 +35,7 @@ class QLearnerAgent(BaseAgent):
             self._b_rms = 0.0
 
     def init(self, n_episodes, shape_input, shape_output):
-        self.QNet = MLP(shape_input, shape_output, self.N_h, self.activation)
+        self.QNet = MLP(shape_input, shape_output, self.N_h, self.activation, self.mlp_initialization)
         self.eps = self.eps_0
 
         if self.optimizer == 'rmsprop':

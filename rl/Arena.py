@@ -71,6 +71,9 @@ class Arena:
                         Q = agent.feedback(R, prev_X, X, selected_action, allowed_a, i,Done==1)
                         action_cnt += 1
 
+                        if not np.isfinite(Q).all():
+                            print(f"Exp: {k}, {i}, Qvalues fucked")
+
                         max_norm = max(max_norm, np.linalg.norm(agent.QNet.grads))
                         # if max_norm > 20:
                         #     print(f"Exp: {k}, {i}, {max_norm}")

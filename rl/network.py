@@ -2,21 +2,31 @@ from collections import Iterable
 import numpy as np
 
 
-def create_weights(N_in, N_out):
+def create_weights_xavier(N_in, N_out):
     """create weights using Xavier initialization"""
     W = np.random.randn(N_out, N_in)
     W /= np.sqrt(N_in)
     return W
 
+def create_weights_uniform(N_in, N_out):
+    W = np.random.uniform(0,1, (N_out, N_in))
+    W /= np.sqrt(N_in)
+    return W
 
 class MLP:
     """Multilayer Perceptron with ReLU activations"""
-    def __init__(self, N_in, N_out, N_hs, activation="sigmoid"):
+    def __init__(self, N_in, N_out, N_hs, activation="sigmoid", initialization="xavier"):
         assert activation in ["relu", "sigmoid", None], "activation should be either 'relu' or 'sigmoid' or None"
         self.activation = activation
 
         if not isinstance(N_hs, Iterable):
             N_hs = [N_hs]
+
+        if initialization== "xavier":
+            create_weights = create_weights_xavier
+        else:
+            create_weights = create_weights_uniform
+
 
         # input layer
         self.W = [create_weights(N_in, N_hs[0])]
