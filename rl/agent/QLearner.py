@@ -86,6 +86,8 @@ class QLearnerAgent(BaseAgent):
         else:
             raise NotImplementedError
 
+        return Q
+
     def action(self, S, X, A):
         # get Q values - assuming non-batch
         Q = self.QNet(X[np.newaxis, ...])[0]
