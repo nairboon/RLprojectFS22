@@ -1,5 +1,5 @@
 from typing import List
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 from tqdm import tqdm
@@ -26,6 +26,7 @@ class RunMetrics:
     avg_moves: float
     max_norms: float
     max_qvalues: float
+    early_stopped_episodes: List[int] = field(default_factory=list)
 
 
 class Arena:
@@ -34,6 +35,8 @@ class Arena:
         self.agents = agents
         self.params = {"board_size" : 4}
         self.ma_length = kwargs.get("ma_length", 16)
+        self.early_stop = kwargs.get("early_stop", False)
+        self.early_stop_q_treshold = kwargs.get("early_stop_q_treshold", 1e3)
 
     def sample(self, episodes, runs=1):
 
@@ -47,6 +50,8 @@ class Arena:
     def run_agent(self, agent, episodes, runs):
         env = Chess_Env(self.params["board_size"])
 
+        early_stop_ids = []
+
         # per step
         rewards = np.ndarray((runs, episodes))
         moves = np.ndarray((runs, episodes))
@@ -55,6 +60,7 @@ class Arena:
 
         with tqdm(total=runs * episodes) as pbar:
             for k in range(runs):
+                early_stopped = False
                 S, X, allowed_a = env.Initialise_game()
                 agent.init(n_episodes=episodes, shape_input=X.shape[0], shape_output=allowed_a.shape[0])
                 for i in range(episodes):
@@ -79,6 +85,11 @@ class Arena:
                         #     print(f"Exp: {k}, {i}, {max_norm}")
 
                         max_qvalue = max(max_qvalue, np.linalg.norm(Q))
+                        if self.early_stop and max_qvalue > self.early_stop_q_treshold:
+                            print(f"Q Early stop reached: {k}, {i}, {max_qvalue}")
+                            early_stopped = True
+                            early_stop_ids.append(i)
+                            break
                         # if max_qvalue > 20:
                         #     print(f"Q Exp: {k}, {i}, {max_qvalue}")
 
@@ -89,5 +100,11 @@ class Arena:
                     max_qvalues[k, i] = max_qvalue
                     pbar.update()
 
+                    if early_stopped:
+                        break
 
-        return RunMetrics(ma(rewards.mean(axis=0),self.ma_length), ma(moves.mean(axis=0),self.ma_length), max_norms.mean(axis=0),max_qvalues.mean(axis=0))
+        metrics = RunMetrics(ma(rewards.mean(axis=0),self.ma_length), ma(moves.mean(axis=0),self.ma_length), max_norms.mean(axis=0),max_qvalues.mean(axis=0))
+        if self.early_stop:
+            metrics.early_stopped_episodes = early_stop_ids
+
+        return metrics
