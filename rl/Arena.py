@@ -22,8 +22,9 @@ def ma(arr, N):
 
 @dataclass
 class RunMetrics:
-    avg_reward: float
-    avg_moves: float
+    avg_reward: List[float]
+    avg_moves: List[float]
+    avg_wins: List[float]
     max_norms: float
     max_qvalues: float
     early_stopped_episodes: List[int] = field(default_factory=list)
@@ -34,7 +35,7 @@ class Arena:
     def __init__(self, agents : List[BaseAgent], **kwargs):
         self.agents = agents
         self.params = {"board_size" : 4}
-        self.ma_length = kwargs.get("ma_length", 16)
+        self.ma_length = kwargs.get("ma_length", 10)
         self.early_stop = kwargs.get("early_stop", False)
         self.early_stop_q_treshold = kwargs.get("early_stop_q_treshold", 1e3)
         self.arena_args = kwargs
@@ -55,6 +56,7 @@ class Arena:
         early_stop_ids = []
 
         # per step
+        wins = np.ndarray((runs, episodes))
         rewards = np.ndarray((runs, episodes))
         moves = np.ndarray((runs, episodes))
         max_norms = np.ndarray((runs, episodes))
@@ -95,6 +97,10 @@ class Arena:
                         # if max_qvalue > 20:
                         #     print(f"Q Exp: {k}, {i}, {max_qvalue}")
 
+                    if R >= env.reward_win:
+                        wins[k,i] = 1
+                    else:
+                        wins[k,i] = 0
 
                     rewards[k,i] = R
                     moves[k,i] = action_cnt
@@ -105,7 +111,9 @@ class Arena:
                     if early_stopped:
                         break
 
-        metrics = RunMetrics(ma(rewards.mean(axis=0),self.ma_length), ma(moves.mean(axis=0),self.ma_length), max_norms.mean(axis=0),max_qvalues.mean(axis=0))
+        metrics = RunMetrics(ma(rewards.mean(axis=0),self.ma_length), ma(moves.mean(axis=0),self.ma_length),
+                             ma(wins.mean(axis=0), self.ma_length),
+                             max_norms.mean(axis=0),max_qvalues.mean(axis=0))
         if self.early_stop:
             metrics.early_stopped_episodes = early_stop_ids
 
