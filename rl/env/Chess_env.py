@@ -8,12 +8,20 @@ from .degree_freedom_king2 import *
 from .generate_game import *
 
 
-
 class Chess_Env:
     
-    def __init__(self,N_grid):
-        
-        
+    def __init__(self,N_grid : int, **kwargs):
+
+        self.flag_state_check = kwargs.get("ce_state_check", False)
+        self.flag_reward_check = kwargs.get("ce_reward_check", False)
+
+
+        self.reward_ongoing = 0
+        self.reward_draw = 0
+        self.reward_win = 1
+        self.reward_check = 0.5
+
+
         self.N_grid=N_grid                     # SIZE OF THE BOARD
         
         self.Board=np.zeros([N_grid,N_grid])   # THE BOARD, THIS WILL BE FILLED BY 0 (NO PIECE), 1 (AGENT'S KING), 2 (AGENT'S QUEEN), 3 (OPPONENT'S KING)
@@ -80,7 +88,7 @@ class Chess_Env:
     def OneStep(self,a_agent):
         
         # SET REWARD TO ZERO IF GAME IS NOT ENDED
-        R=0
+        R=self.reward_ongoing
         # SET Done TO ZERO (GAME NOT ENDED)
         Done=0
         
@@ -132,7 +140,7 @@ class Chess_Env:
             # King 2 has no freedom and it is checked
             # Checkmate and collect reward
             Done = 1       # The epsiode ends
-            R = 1          # Reward for checkmate
+            R = self.reward_win          # Reward for checkmate
             allowed_a=[]   # Allowed_a set to nothing (end of the episode)
             X=[]           # Features set to nothing (end of the episode)
         
@@ -141,12 +149,16 @@ class Chess_Env:
            
             # King 2 has no freedom but it is not checked
             Done = 1        # The epsiode ends
-            R = 0.       # Reward for draw
+            R = self.reward_draw       # Reward for draw
             allowed_a=[]    # Allowed_a set to nothing (end of the episode)
             X=[]            # Features set to nothing (end of the episode)
         
         # THE GAME CONTINUES
         else:
+
+            if self.flag_reward_check:
+                if self.check == 1:
+                    R = self.reward_check
             
             # THE OPPONENT MOVES THE KING IN A RANDOM SAFE LOCATION
             allowed_enemy_a = np.where(self.a_k2 > 0)[0]
@@ -175,6 +187,8 @@ class Chess_Env:
             # Allowed actions for the enemy's king
             self.dfk2_constrain, self.a_k2, self.check = degree_freedom_king2(self.dfk1, self.p_k2, self.dfq1, self.Board, self.p_k1)
 
+            assert self.check == 0, "cannot move to check"
+
             # ALLOWED ACTIONS FOR THE AGENT, ONE-HOT ENCODED
             allowed_a=np.concatenate([self.a_q1,self.a_k1],0)
             # FEATURES
@@ -194,7 +208,10 @@ class Chess_Env:
         s_k2 = np.array(self.Board == 3).astype(float).reshape(-1)   # FEATURE FOR ENEMY'S KING POSITION
         
         check=np.zeros([2])    # CHECK? FEATURE
-        check[self.check]=1   
+        check[self.check]=1
+
+        if self.flag_state_check:
+            check = np.array([self.check])
         
         K2dof=np.zeros([8])   # NUMBER OF ALLOWED ACTIONS FOR ENEMY'S KING, ONE-HOT ENCODED
         K2dof[np.sum(self.dfk2_constrain).astype(int)]=1
