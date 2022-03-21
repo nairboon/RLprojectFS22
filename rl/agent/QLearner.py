@@ -19,6 +19,8 @@ class QLearnerAgent(BaseAgent):
         self.activation = kwargs.get("activation", "relu")
         self.mlp_initialization = kwargs.get("initialization", "xavier")
 
+        self.prev_action_sarsa = None
+
         # learning method
         self.method = kwargs.get("method", "q-learning")
         assert self.method in ['q-learning', 'sarsa']
@@ -54,13 +56,10 @@ class QLearnerAgent(BaseAgent):
             if self.method == 'q-learning':
                 next_Q = np.max(next_Q, axis=-1)
             elif self.method == 'sarsa':
-                # epsilon-greedy
-                if random.random() < self.eps:
-                    a, _ = np.where(allowed_A == 1)
-                    a_agent = np.random.permutation(a)[0]
-                    next_Q = next_Q[a_agent]
-                else:
-                    next_Q = np.max(next_Q, axis=-1)
+                next_action = self.choose_action(X,allowed_A)
+                self.prev_allowed_sarsa = allowed_A
+                self.prev_action_sarsa = next_action
+                next_Q = next_Q[next_action]
             else:
                 raise NotImplementedError
 
@@ -90,7 +89,23 @@ class QLearnerAgent(BaseAgent):
 
         return Q
 
+    def reset(self):
+        self.prev_action_sarsa = None
+
     def action(self, S, X, A):
+        next_action = None
+        if self.method == 'q-learning':
+            next_action = self.choose_action(X, A)
+        elif self.method == 'sarsa':
+            if self.prev_action_sarsa:
+                #assert np.array_equal(A, self.prev_allowed_sarsa)
+                next_action= self.prev_action_sarsa
+            else:
+                next_action = self.choose_action(X,A)
+
+        return next_action
+
+    def choose_action(self, X, A):
         # get Q values - assuming non-batch
         Q = self.QNet(X[np.newaxis, ...])[0]
 

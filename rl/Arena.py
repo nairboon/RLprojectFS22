@@ -68,6 +68,7 @@ class Arena:
                 S, X, allowed_a = env.Initialise_game()
                 agent.init(n_episodes=episodes, shape_input=X.shape[0], shape_output=allowed_a.shape[0])
                 for i in range(episodes):
+                    agent.reset()
                     S, X, allowed_a = env.Initialise_game()
                     Done = 0
                     action_cnt = 0
