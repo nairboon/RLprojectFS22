@@ -14,12 +14,15 @@ class Chess_Env:
 
         self.flag_state_check = kwargs.get("ce_state_check", False)
         self.flag_reward_check = kwargs.get("ce_reward_check", False)
-
+        self.flag_reward_draw = kwargs.get("ce_reward_draw", False)
 
         self.reward_ongoing = 0
         self.reward_draw = 0
         self.reward_win = 1
         self.reward_check = 0.5
+
+        if self.flag_reward_draw:
+            self.reward_draw = -1
 
 
         self.N_grid=N_grid                     # SIZE OF THE BOARD
