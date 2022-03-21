@@ -13,13 +13,14 @@ class Chess_Env:
     def __init__(self,N_grid : int, **kwargs):
 
         self.flag_state_check = kwargs.get("ce_state_check", False)
+        self.flag_state_extra = kwargs.get("ce_state_extra", False)
         self.flag_reward_check = kwargs.get("ce_reward_check", False)
         self.flag_reward_draw = kwargs.get("ce_reward_draw", False)
 
         self.reward_ongoing = 0
         self.reward_draw = 0
         self.reward_win = 1
-        self.reward_check = 0.5
+        self.reward_check = kwargs.get("ce_reward_check_value", 0.5)
 
         if self.flag_reward_draw:
             self.reward_draw = -1
@@ -218,11 +219,70 @@ class Chess_Env:
         
         K2dof=np.zeros([8])   # NUMBER OF ALLOWED ACTIONS FOR ENEMY'S KING, ONE-HOT ENCODED
         K2dof[np.sum(self.dfk2_constrain).astype(int)]=1
-        
-        # ALL FEATURES...
-        x = np.concatenate([s_k1, s_q1, s_k2, check, K2dof],0)
+
+        if self.flag_state_extra:
+            ef = self.extra_features()
+            x = np.concatenate([s_k1, s_q1, s_k2, check, K2dof, ef], 0)
+        else:
+            # ALL FEATURES...
+            x = np.concatenate([s_k1, s_q1, s_k2, check, K2dof],0)
         
         return x
+
+    def extra_features(self):
+        pos = np.where(self.Board==3)
+        posx = pos[0][0]
+        posy = pos[1][0]
+
+        ie = self.N_grid-1
+
+        # walls
+        wall_l = posx == 0
+        wall_r = posx == ie
+        wall_t = posy == 0
+        wall_b = posy == ie
+
+        wall = wall_l or wall_r or wall_b or wall_t
+
+        # corner
+        c_1 = wall_l and wall_t
+        c_2 = wall_r and wall_t
+        c_3 = wall_l and wall_b
+        c_4 = wall_r and wall_b
+
+        corner = c_1 or c_2 or c_3 or c_4
+
+        f_walls = [wall, wall_l, wall_r, wall_t, wall_b]
+        f_corner = [corner, c_1, c_2, c_3, c_4]
+
+
+        # support
+        pos_ko = np.where(self.Board==1)
+        pos_ko_x = pos_ko[0][0]
+        pos_ko_y = pos_ko[1][0]
+
+        pos_qo = np.where(self.Board==2)
+        pos_qo_x = pos_qo[0][0]
+        pos_qo_y = pos_qo[1][0]
+
+        line_a = posx == pos_ko_x and ( abs(posy-pos_ko_y) == 2)
+        line_b = posy == pos_ko_y and ( abs(posx-pos_ko_x) == 2)
+
+        line_ours_x = pos_qo_x == pos_ko_x
+        line_ours_y = pos_qo_y == pos_ko_y
+
+
+        support_a = line_a and line_ours_y
+        support_b = line_b and line_ours_x
+
+
+        # middle
+        q_middle = (0 < pos_qo_x) and (pos_qo_x < ie) and (0 < pos_qo_y) and (pos_qo_y < ie)
+
+        f_support = [support_a, support_b, line_ours_x, line_ours_y, q_middle]
+
+        extra_features = np.array(f_support).astype(float).reshape(-1)
+        return extra_features
         
         
 
