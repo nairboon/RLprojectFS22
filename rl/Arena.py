@@ -37,6 +37,7 @@ class Arena:
         self.ma_length = kwargs.get("ma_length", 16)
         self.early_stop = kwargs.get("early_stop", False)
         self.early_stop_q_treshold = kwargs.get("early_stop_q_treshold", 1e3)
+        self.arena_args = kwargs
 
     def sample(self, episodes, runs=1):
 
@@ -48,7 +49,8 @@ class Arena:
         return results
 
     def run_agent(self, agent, episodes, runs):
-        env = Chess_Env(self.params["board_size"])
+        print(f"run_agent {agent.name} with {self.arena_args}")
+        env = Chess_Env(self.params["board_size"], **self.arena_args)
 
         early_stop_ids = []
 
