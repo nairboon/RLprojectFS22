@@ -10,38 +10,49 @@ import matplotlib.pyplot as plt
 np.random.seed(42)
 
 
-gamma=0.45
+
 gamma=0.85
-eta=0.05
+
 eta = 0.0035
 epsilon_0=0.2
 activation = "sigmoid"
 activation = None
-N_h = [58]
-N_h = [32]
+
+N_h = [200]
 initialization = "uniform"
+
+
+ma_length = 25
+
 
 exp_name = "t3_std_semigrads"
 
-agent_1_lbl = "QLearning"
-agent_2_lbl = "SARSA"
+agent_1_lbl = "QLearning (Linear)"
+agent_2_lbl = "QLearning (Deep)"
+agent_3_lbl = "SARSA"
 
 qlearnerAgent = QLearnerAgent(optimizer='sgd', method="q-learning", activation=activation,initialization=initialization,gamma=gamma,
                               eta=eta, epsilon_0=epsilon_0, beta=0.00005, N_h=N_h, name=agent_1_lbl)
 
+deepqlearnerAgent = QLearnerAgent(optimizer='sgd', method="q-learning", activation="relu",initialization="uniform",gamma=gamma,
+                              eta=eta, epsilon_0=epsilon_0, beta=0.00005, N_h=[200], name=agent_2_lbl)
+
+
 sarsaAgent = QLearnerAgent(optimizer='sgd', method="sarsa", activation=activation,initialization=initialization,gamma=gamma,
-                              eta=eta, epsilon_0=epsilon_0, beta=0.00005, N_h=N_h, name=agent_2_lbl)
-
-arena = Arena(agents=[qlearnerAgent, sarsaAgent])
+                              eta=eta, epsilon_0=epsilon_0, beta=0.00005, N_h=N_h, name=agent_3_lbl)
 
 
-n_runs = 10
 
-results = arena.sample(episodes=5000, runs=n_runs)
+arena = Arena(agents=[sarsaAgent, deepqlearnerAgent, qlearnerAgent],ma_length=ma_length)
+
+
+n_runs = 25
+
+results = arena.sample(episodes=30000, runs=n_runs)
 
 res_1 = results[agent_1_lbl]
 res_2 = results[agent_2_lbl]
-
+res_3 = results[agent_3_lbl]
 
 params = {
    'font.family': 'serif',
@@ -52,22 +63,25 @@ params = {
 rcParams.update(params)
 
 fig, ax = plt.subplots()
-fig.suptitle(f"Reward per game")
-ax.set_xlabel('Steps')
+#fig.suptitle(f"Reward per game")
+ax.set_xlabel('Episodes')
 ax.set_ylim([0,1])
-#ax.set_ylabel('Average Reward per game')
+ax.set_ylabel('Average Reward per game')
+
 ax.plot(res_1.avg_reward, label=f"{agent_1_lbl}")
 ax.plot(res_2.avg_reward, label=f"{agent_2_lbl}")
+ax.plot(res_3.avg_reward, label=f"{agent_3_lbl}")
 ax.legend()
 fig.savefig(f'plots/{exp_name}_reward.png', dpi=300)
 
 
 fig, ax = plt.subplots()
-fig.suptitle(f"Number of moves per game")
-ax.set_xlabel('Steps')
-#ax.set_ylabel('Average Reward per game')
+#fig.suptitle(f"Number of moves per game")
+ax.set_xlabel('Episodes')
+ax.set_ylabel('Average number of moves per game')
 ax.plot(res_1.avg_moves, label=f"{agent_1_lbl}")
 ax.plot(res_2.avg_moves, label=f"{agent_2_lbl}")
+ax.plot(res_3.avg_moves, label=f"{agent_3_lbl}")
 ax.legend()
 fig.savefig(f'plots/{exp_name}_moves.png', dpi=300)
 
