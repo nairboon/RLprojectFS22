@@ -1,6 +1,9 @@
 import numpy as np
-from datasets import tqdm
+# from datasets import tqdm
+from tqdm import tqdm
 from matplotlib import rcParams
+import pandas as pd
+import seaborn as sns
 
 from rl.Arena import Arena
 from rl.agent.QLearner import QLearnerAgent
@@ -14,7 +17,7 @@ np.random.seed(42)
 
 
 eta = 0.0035
-epsilon_0=0.2
+epsilon_0 = 0.2
 #activation = "sigmoid"
 activation = None
 
@@ -27,10 +30,10 @@ agent_1_lbl = "QLearning"
 agent_2_lbl = "SARSA"
 
 
-N_episodes = 500
+N_episodes = 5000
 N_runs = 3
 last_n = 25
-def eval(gamma, beta):
+def eval(beta, gamma):
     qlearnerAgent = QLearnerAgent(optimizer='sgd', method="q-learning", activation=activation,
                                   initialization=initialization, gamma=gamma,
                                   eta=eta, epsilon_0=epsilon_0, beta=beta, N_h=N_h, name=agent_1_lbl)
@@ -42,35 +45,40 @@ def eval(gamma, beta):
     return avg_last_r
 
 
-N_gamma = 5
-N_beta = 5
+N_gamma = 10
+N_beta = 10
 
-X = np.linspace(0,1,N_gamma)# gamma
-Y = np.logspace(-3,-1,N_beta) # beta in log
+X = np.around(np.logspace(-3,-1,N_beta), 3)  # beta in log
+Y = np.around(np.linspace(0,1,N_gamma), 3)  # gamma
 
 Z = np.zeros((X.shape[0], Y.shape[0]))
 
 for i,x in enumerate(X):
     for j,y in enumerate(Y):
         Z[i,j] = eval(x, y)
+data = pd.DataFrame(data=Z, index=X, columns=Y)
 
+sns.set(font_scale=0.7)
+ax = sns.heatmap(data)
+ax.set(ylabel='ß', xlabel='γ')
 
-
-
-params = {
-   'font.family': 'serif',
-   'figure.figsize': [4.5, 4.5]
-   }
-#rcParams.update(params)
-
-fig, ax = plt.subplots()
-#fig.suptitle(f"Reward per game")
-ax.set_xlabel(r"$\gamma$")
-ax.set_ylabel(r"$\beta$")
-im = ax.imshow(Z,extent=[0,1,0,1])
-fig.colorbar(im, ax=ax)
 plt.show()
-fig.savefig(f'plots/{exp_name}_imshow.png', dpi=300)
+
+
+# params = {
+#    'font.family': 'serif',
+#    'figure.figsize': [4.5, 4.5]
+#    }
+# #rcParams.update(params)
+
+# fig, ax = plt.subplots()
+# #fig.suptitle(f"Reward per game")
+# ax.set_xlabel(r"$\gamma$")
+# ax.set_ylabel(r"$\beta$")
+# im = ax.imshow(Z,extent=[0,1,0,1])
+# fig.colorbar(im, ax=ax)
+# plt.show()
+# fig.savefig(f'plots/{exp_name}_imshow.png', dpi=300)
 
 #
 #
