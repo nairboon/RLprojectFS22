@@ -7,5 +7,12 @@ This repository contains the implementations for the assignment for Introduction
 
 ## Requirements
 
+The code was developed and tested in Python 3.8.
+
+You can install the dependencies for the codebase from the `requirements.txt`, using a package manager like PyPI:
+```python
+pip install -r requirements.txt
+```
+
 
 ## Usage
