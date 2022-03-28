@@ -10,7 +10,7 @@ def create_weights_xavier(N_in, N_out):
     return W
 
 def create_weights_uniform(N_in, N_out):
-    W = np.random.uniform(0,1, (N_out, N_in))
+    W = np.random.uniform(-1,1, (N_out, N_in))
     W /= np.sqrt(N_in)
     return W
 

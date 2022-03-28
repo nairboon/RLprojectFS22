@@ -281,7 +281,7 @@ class Chess_Env:
 
         f_support = [support_a, support_b, line_ours_x, line_ours_y, q_middle]
 
-        extra_features = np.array(f_support).astype(float).reshape(-1)
+        extra_features = np.array(f_walls + f_corner + f_support).astype(float).reshape(-1)
         return extra_features
         
         
