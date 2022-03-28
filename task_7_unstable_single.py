@@ -1,7 +1,7 @@
 import numpy as np
 from datasets import tqdm
 from matplotlib import rcParams
-
+from sklearn.model_selection import ParameterGrid
 from rl.Arena import Arena
 from rl.agent.QLearner import QLearnerAgent
 from rl.agent.Random import RandomAgent
@@ -14,25 +14,20 @@ np.random.seed(42)
 
 
 
-eta = 0.25
 epsilon_0=0.2
-#activation = "sigmoid"
-activation = None
 
+activation = None
 N_h = None
-#N_h = [36]
 initialization = "uniform"
 
 exp_name = "t7_unstable_single"
 
-agent_1_lbl = "Q(none)"
-agent_2_lbl = "Q(relu)"
-agent_3_lbl = "Q(sigmoid)"
+agent_1_lbl = "Q-Learning"
 
 agents = [agent_1_lbl]
 
-N_episodes = 5000
-N_runs = 10
+N_episodes = 500
+N_runs = 100
 
 def eval_algos(gamma, eta, beta=0.00005):
     print(gamma,eta)
@@ -61,8 +56,8 @@ def calc_survival(N_runs, N_episodes, early):
 
 
 
-from sklearn.model_selection import ParameterGrid
-param_grid = {'gamma': [0.90, 0.99], 'eta': [0.25, 0.3, 0.4]}
+
+param_grid = {'gamma': [0.90, 0.99], 'eta': [0.3, 0.4]}
 pg = ParameterGrid(param_grid)
 
 
@@ -80,31 +75,29 @@ for param in pg:
 
 print(labels)
 
-#early = res[agent_1_lbl].early_stopped_episodes
 
-# surviving = np.zeros(N_episodes)
-# deadnt = N_runs - len(early)
-# surviving[:] += deadnt
-# for i in early:
-#     surviving[:i] += 1
-#
-# S = surviving/N_runs
-#plt.plot(S[:150])
-#plt.show()
+params = {
+   'font.family': 'serif',
+   'xtick.labelsize': 'x-small',
+   'ytick.labelsize': 'x-small',
+   'figure.figsize': [4.5, 4.5]
+   }
+rcParams.update(params)
+
 
 for agent in agents:
     fig, ax = plt.subplots()
     #fig.suptitle(f"Reward per game")
-    ax.set_xlabel('episodes t')
+    ax.set_xlabel('Episodes t')
     ax.set_ylim([0,1.01])
-    ax.set_ylabel('numerical survival $S(t)$')
+    ax.set_ylabel('Numerical Survival $S(t)$')
 
     for x, label in zip(curves, labels):
         if agent in label:
             ax.plot(x, label=label)
     ax.legend()
-    plt.show()
     fig.savefig(f'plots/{exp_name}_survival_{agent}.png', dpi=300)
+    #plt.show()
 
 
 # N_gamma = 5

@@ -16,3 +16,9 @@ pip install -r requirements.txt
 
 
 ## Usage
+
+
+### Replicate all experiments
+```
+./run_all.sh
+```
