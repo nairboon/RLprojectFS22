@@ -4,7 +4,7 @@ import numpy as np
 
 
 def create_weights_xavier(N_in, N_out):
-    """create weights using Xavier initialization"""
+    """create weights using Xavier-like initialization"""
     W = np.random.randn(N_out, N_in)
     W /= np.sqrt(N_in)
     return W
@@ -14,8 +14,9 @@ def create_weights_uniform(N_in, N_out):
     W /= np.sqrt(N_in)
     return W
 
+
 class MLP:
-    """Multilayer Perceptron with ReLU activations"""
+    """Multilayer Perceptron with nonlinear activations"""
     def __init__(self, N_in, N_out, N_hs=None, activation="sigmoid", initialization="xavier"):
         assert activation in ["relu", "sigmoid", None], "activation should be either 'relu' or 'sigmoid' or None"
         self.activation = activation
@@ -70,10 +71,7 @@ class MLP:
         for layer in range(len(self.dW)):
             _grads.append(self.dW[layer].flatten())
             _grads.append(self.db[layer])
-        try:
-            return np.concatenate(_grads)
-        except:
-            import pdb; pdb.set_trace()
+        return np.concatenate(_grads)
 
     def zero_grad(self):
         """set all gradients to zero and remove cache"""
