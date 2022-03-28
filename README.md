@@ -4,6 +4,7 @@ by Younghoon Kim (21-743-703) and Remo Hertig (13-738-323).
 
 This repository contains the implementations for the assignment for Introduction to Reinforcement Learning, FS2022.
 
+![](plots/t6_B_abs_avg_wins.png)
 
 ## Requirements
 
