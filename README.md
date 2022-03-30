@@ -25,7 +25,6 @@ bash run_all.sh
 ```
 
 ### Replicate individual experiments
-### Replicate individual experiments
 ```
 python task_3_A_semigrad.py
 python task_4.py
