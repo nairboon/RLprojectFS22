@@ -21,10 +21,11 @@ pip install -r requirements.txt
 
 ### Replicate all experiments
 ```
-./run_all.sh
+bash run_all.sh
 ```
 
-### Replicatate individual experiments
+### Replicate individual experiments
+### Replicate individual experiments
 ```
 python task_3_A_semigrad.py
 python task_4.py
