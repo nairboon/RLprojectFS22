@@ -1,12 +1,9 @@
 import numpy as np
-from datasets import tqdm
 from matplotlib import rcParams
 from sklearn.model_selection import ParameterGrid
 from rl.Arena import Arena
 from rl.agent.QLearner import QLearnerAgent
-from rl.agent.Random import RandomAgent
 import matplotlib.pyplot as plt
-import matplotlib.tri as tri
 
 np.random.seed(42)
 
